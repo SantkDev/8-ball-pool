@@ -315,3 +315,925 @@ jobs:
                   val footer = TextView(this)
                   footer.text = "PoolAid  ·  v1.0"
                   footer.setTextColor(Color.parseColor("#5A6573"))
+                  footer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                  footer.gravity = Gravity.CENTER
+                  root.addView(footer, params(match, wrap, 8, 0))
+
+                  setContentView(scroll)
+              }
+
+              override fun onResume() {
+                  super.onResume()
+                  val overlayOk = Settings.canDrawOverlays(this)
+                  val a11yOk = AutoShooterService.inst != null
+                  setStatus(overlayStatus, overlayOk)
+                  setStatus(a11yStatus, a11yOk)
+                  if (overlayOk && a11yOk) {
+                      pill(summary, "Todo listo · pulsa EMPEZAR", cGreenLight)
+                  } else {
+                      pill(summary, "Faltan permisos por activar", cWarn)
+                  }
+              }
+
+              private fun pill(tv: TextView, text: String, color: Int) {
+                  tv.text = text
+                  tv.setTextColor(color)
+                  tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                  tv.typeface = Typeface.DEFAULT_BOLD
+                  tv.setPadding(dp(12), dp(5), dp(12), dp(5))
+                  tv.background = rounded(tint(color, 38), 50)
+              }
+
+              private fun setStatus(tv: TextView, ok: Boolean) {
+                  if (ok) pill(tv, "Listo", cGreenLight) else pill(tv, "Pendiente", cWarn)
+              }
+
+              private fun card(): LinearLayout {
+                  val c = LinearLayout(this)
+                  c.orientation = LinearLayout.VERTICAL
+                  c.background = rounded(cCard, 18, 1, cCardLine)
+                  c.setPadding(dp(16), dp(16), dp(16), dp(16))
+                  c.layoutParams = params(match, wrap, 0, 12)
+                  return c
+              }
+
+              private fun badge(number: String): TextView {
+                  val b = TextView(this)
+                  b.text = number
+                  b.gravity = Gravity.CENTER
+                  b.setTextColor(Color.WHITE)
+                  b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                  b.typeface = Typeface.DEFAULT_BOLD
+                  val d = GradientDrawable()
+                  d.shape = GradientDrawable.OVAL
+                  d.setColor(cGreen)
+                  b.background = d
+                  return b
+              }
+
+              private fun cardHeader(number: String, head: String, status: TextView?): LinearLayout {
+                  val row = LinearLayout(this)
+                  row.orientation = LinearLayout.HORIZONTAL
+                  row.gravity = Gravity.CENTER_VERTICAL
+
+                  row.addView(badge(number), LinearLayout.LayoutParams(dp(30), dp(30)))
+
+                  val t = TextView(this)
+                  t.text = head
+                  t.setTextColor(Color.WHITE)
+                  t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+                  t.typeface = Typeface.DEFAULT_BOLD
+                  t.setPadding(dp(12), 0, dp(8), 0)
+                  row.addView(t, LinearLayout.LayoutParams(0, wrap, 1f))
+
+                  if (status != null) row.addView(status)
+                  return row
+              }
+
+              private fun description(text: String): TextView {
+                  val d = TextView(this)
+                  d.text = text
+                  d.setTextColor(cMuted)
+                  d.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                  d.setLineSpacing(0f, 1.15f)
+                  d.setPadding(0, dp(10), 0, dp(14))
+                  return d
+              }
+
+              private fun stepCard(number: String, head: String, desc: String, btn: String, status: TextView, action: () -> Unit): View {
+                  val c = card()
+                  c.addView(cardHeader(number, head, status))
+                  c.addView(description(desc))
+                  c.addView(button(btn, 1, 46, action), params(match, dp(46)))
+                  return c
+              }
+
+              private fun startCard(): View {
+                  val c = card()
+                  c.addView(cardHeader("3", "Capturar y jugar", null))
+                  c.addView(description("Al pulsar EMPEZAR se pedirá el permiso de captura de pantalla y se abrirá el juego."))
+                  c.addView(button("EMPEZAR", 0, 54) { begin() }, params(match, dp(54)))
+                  c.addView(button("DETENER", 2, 48) {
+                      stopService(Intent(this, HackService::class.java))
+                  }, params(match, dp(48), 10, 0))
+                  return c
+              }
+
+              private fun controlsCard(): View {
+                  val c = card()
+
+                  val t = TextView(this)
+                  t.text = "Controles de la burbuja"
+                  t.setTextColor(Color.WHITE)
+                  t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+                  t.typeface = Typeface.DEFAULT_BOLD
+                  t.setPadding(0, 0, 0, dp(12))
+                  c.addView(t)
+
+                  c.addView(controlRow("TOCAR", "Muestra u oculta las guías"))
+                  c.addView(controlRow("MANTENER", "Dispara automáticamente"))
+                  c.addView(controlRow("ARRASTRAR", "Mueve la burbuja por la pantalla"))
+                  return c
+              }
+
+              private fun controlRow(chip: String, text: String): View {
+                  val row = LinearLayout(this)
+                  row.orientation = LinearLayout.HORIZONTAL
+                  row.gravity = Gravity.CENTER_VERTICAL
+                  row.layoutParams = params(match, wrap, 0, 8)
+
+                  val ch = TextView(this)
+                  ch.text = chip
+                  ch.gravity = Gravity.CENTER
+                  ch.setTextColor(cGreenLight)
+                  ch.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                  ch.typeface = Typeface.DEFAULT_BOLD
+                  ch.setPadding(dp(6), dp(6), dp(6), dp(6))
+                  ch.background = rounded(cChip, 10)
+                  row.addView(ch, LinearLayout.LayoutParams(dp(98), wrap))
+
+                  val d = TextView(this)
+                  d.text = text
+                  d.setTextColor(cMuted)
+                  d.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                  d.setPadding(dp(12), 0, 0, 0)
+                  row.addView(d, LinearLayout.LayoutParams(0, wrap, 1f))
+                  return row
+              }
+
+              // kind: 0 = principal (verde), 1 = secundario, 2 = contorno rojo
+              private fun button(label: String, kind: Int, heightDp: Int, action: () -> Unit): Button {
+                  val b = Button(this)
+                  b.text = label
+                  b.isAllCaps = false
+                  b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+                  b.typeface = Typeface.DEFAULT_BOLD
+                  b.stateListAnimator = null
+
+                  val content: GradientDrawable
+                  when (kind) {
+                      0 -> {
+                          content = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(cGreen, cGreenDark))
+                          content.cornerRadius = dp(14).toFloat()
+                          b.setTextColor(Color.WHITE)
+                      }
+                      1 -> {
+                          content = rounded(cChip, 12, 1, cCardLine)
+                          b.setTextColor(Color.WHITE)
+                      }
+                      else -> {
+                          content = rounded(Color.TRANSPARENT, 14, 2, cDanger)
+                          b.setTextColor(cDanger)
+                      }
+                  }
+                  val mask = rounded(Color.WHITE, 14)
+                  b.background = RippleDrawable(ColorStateList.valueOf(tint(Color.WHITE, 50)), content, mask)
+                  b.setOnClickListener { action() }
+                  return b
+              }
+
+              private fun begin() {
+                  if (!Settings.canDrawOverlays(this)) {
+                      startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+                      return
+                  }
+                  if (Build.VERSION.SDK_INT >= 33) {
+                      requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 7)
+                  }
+                  val mpm = getSystemService(MediaProjectionManager::class.java)
+                  startActivityForResult(mpm.createScreenCaptureIntent(), reqCapture)
+              }
+
+              @Suppress("DEPRECATION")
+              override fun onActivityResult(code: Int, result: Int, data: Intent?) {
+                  super.onActivityResult(code, result, data)
+                  if (code == reqCapture && result == RESULT_OK && data != null) {
+                      val svc = Intent(this, HackService::class.java)
+                      svc.putExtra("code", result)
+                      svc.putExtra("data", data)
+                      startForegroundService(svc)
+                      val game = packageManager.getLaunchIntentForPackage("com.miniclip.eightballpool")
+                      if (game != null) startActivity(game)
+                  }
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/santk/poolaid/AutoShooterService.kt << 'EOF'
+          package com.santk.poolaid
+
+          import android.accessibilityservice.AccessibilityService
+          import android.accessibilityservice.GestureDescription
+          import android.graphics.Path
+          import android.view.accessibility.AccessibilityEvent
+
+          class AutoShooterService : AccessibilityService() {
+
+              override fun onServiceConnected() {
+                  inst = this
+              }
+
+              override fun onDestroy() {
+                  if (inst === this) inst = null
+                  super.onDestroy()
+              }
+
+              override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+
+              override fun onInterrupt() {}
+
+              fun stroke(points: List<Pair<Float, Float>>, ms: Long) {
+                  if (points.size < 2) return
+                  val path = Path()
+                  path.moveTo(points[0].first, points[0].second)
+                  for (i in 1 until points.size) path.lineTo(points[i].first, points[i].second)
+                  val gesture = GestureDescription.Builder()
+                      .addStroke(GestureDescription.StrokeDescription(path, 0, ms))
+                      .build()
+                  dispatchGesture(gesture, null, null)
+              }
+
+              companion object {
+                  @Volatile
+                  var inst: AutoShooterService? = null
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/santk/poolaid/TableVision.kt << 'EOF'
+          package com.santk.poolaid
+
+          import android.graphics.Bitmap
+          import android.graphics.Color
+          import kotlin.math.abs
+          import kotlin.math.hypot
+
+          class TableVision {
+
+              class Table(val left: Int, val top: Int, val right: Int, val bottom: Int, val radius: Float) {
+                  val width: Float get() = (right - left).toFloat()
+                  val height: Float get() = (bottom - top).toFloat()
+              }
+
+              class Ball(val x: Float, val y: Float, val score: Float)
+
+              fun findTable(bmp: Bitmap): Table? {
+                  val w = bmp.width
+                  val h = bmp.height
+                  var minX = w
+                  var minY = h
+                  var maxX = 0
+                  var maxY = 0
+                  var count = 0
+                  val step = 4
+                  var y = 0
+                  while (y < h) {
+                      var x = 0
+                      while (x < w) {
+                          val c = bmp.getPixel(x, y)
+                          val r = Color.red(c)
+                          val g = Color.green(c)
+                          val b = Color.blue(c)
+                          val mx = maxOf(r, g, b)
+                          val mn = minOf(r, g, b)
+                          val sat = mx - mn
+                          val green = g >= r && g >= b - 12
+                          val blue = b >= r && b >= g - 12
+                          val brown = r > g && g > b && mx in 40..175 && sat > 24
+                          if (sat > 20 && mx > 34 && (green || blue || brown)) {
+                              if (x < minX) minX = x
+                              if (x > maxX) maxX = x
+                              if (y < minY) minY = y
+                              if (y > maxY) maxY = y
+                              count++
+                          }
+                          x += step
+                      }
+                      y += step
+                  }
+                  if (count < (w * h / step / step) / 12) return null
+                  if (maxX - minX < w / 3 || maxY - minY < h / 4) return null
+                  val left = minX + 3
+                  val right = maxX - 3
+                  val top = minY + 3
+                  val bottom = maxY - 3
+                  if (right - left < 60 || bottom - top < 60) return null
+                  val radius = maxOf(4f, (right - left) / 88f)
+                  return Table(left, top, right, bottom, radius)
+              }
+
+              fun findBalls(bmp: Bitmap, t: Table): List<Ball> {
+                  val cx = (t.left + t.right) / 2
+                  val cy = (t.top + t.bottom) / 2
+                  var sr = 0L
+                  var sg = 0L
+                  var sb = 0L
+                  var n = 0
+                  var dy = -24
+                  while (dy <= 24) {
+                      var dx = -24
+                      while (dx <= 24) {
+                          val x = cx + dx
+                          val y = cy + dy
+                          if (x >= 0 && y >= 0 && x < bmp.width && y < bmp.height) {
+                              val c = bmp.getPixel(x, y)
+                              sr += Color.red(c)
+                              sg += Color.green(c)
+                              sb += Color.blue(c)
+                              n++
+                          }
+                          dx += 6
+                      }
+                      dy += 6
+                  }
+                  if (n == 0) return emptyList()
+                  val fr = (sr / n).toInt()
+                  val fg = (sg / n).toInt()
+                  val fb = (sb / n).toInt()
+
+                  val cell = maxOf(3, (t.radius / 1.6f).toInt())
+                  val cols = (t.width / cell).toInt()
+                  val rows = (t.height / cell).toInt()
+                  if (cols < 5 || rows < 5) return emptyList()
+
+                  val grid = Array(rows) { BooleanArray(cols) }
+                  for (r in 0 until rows) {
+                      for (c in 0 until cols) {
+                          val x = (t.left + c * cell + cell / 2).toInt()
+                          val y = (t.top + r * cell + cell / 2).toInt()
+                          if (x < 0 || y < 0 || x >= bmp.width || y >= bmp.height) continue
+                          val p = bmp.getPixel(x, y)
+                          val d = abs(Color.red(p) - fr) + abs(Color.green(p) - fg) + abs(Color.blue(p) - fb)
+                          val mx = maxOf(Color.red(p), Color.green(p), Color.blue(p))
+                          grid[r][c] = d > 85 && mx > 55
+                      }
+                  }
+
+                  val seen = Array(rows) { BooleanArray(cols) }
+                  val out = ArrayList<Ball>()
+                  for (r in 0 until rows) {
+                      for (c in 0 until cols) {
+                          if (!grid[r][c] || seen[r][c]) continue
+                          var sumX = 0f
+                          var sumY = 0f
+                          var cells = 0
+                          var minC = c
+                          var maxC = c
+                          var minR = r
+                          var maxR = r
+                          val stack = ArrayDeque<Int>()
+                          stack.addLast(r * cols + c)
+                          seen[r][c] = true
+                          while (stack.isNotEmpty()) {
+                              val v = stack.removeLast()
+                              val rr = v / cols
+                              val cc = v % cols
+                              sumX += t.left + cc * cell + cell / 2f
+                              sumY += t.top + rr * cell + cell / 2f
+                              cells++
+                              if (cc < minC) minC = cc
+                              if (cc > maxC) maxC = cc
+                              if (rr < minR) minR = rr
+                              if (rr > maxR) maxR = rr
+                              for (k in 0 until 4) {
+                                  val nr = rr + (if (k == 0) -1 else if (k == 1) 1 else 0)
+                                  val nc = cc + (if (k == 2) -1 else if (k == 3) 1 else 0)
+                                  if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) continue
+                                  if (!grid[nr][nc] || seen[nr][nc]) continue
+                                  seen[nr][nc] = true
+                                  stack.addLast(nr * cols + nc)
+                              }
+                          }
+                          if (cells < 3 || cells > 60) continue
+                          val bw = maxC - minC + 1
+                          val bh = maxR - minR + 1
+                          val ratio = bw.toFloat() / bh.toFloat()
+                          if (ratio < 0.55f || ratio > 1.8f) continue
+                          val bx = sumX / cells
+                          val by = sumY / cells
+                          if (hypot(bx - cx, by - cy) < t.radius) continue
+                          val col = bmp.getPixel(bx.toInt().coerceIn(0, bmp.width - 1), by.toInt().coerceIn(0, bmp.height - 1))
+                          val mx = maxOf(Color.red(col), Color.green(col), Color.blue(col))
+                          val mn = minOf(Color.red(col), Color.green(col), Color.blue(col))
+                          out.add(Ball(bx, by, (mx - (mx - mn) * 0.6f).toFloat()))
+                      }
+                  }
+                  return out
+              }
+
+              fun pickCue(balls: List<Ball>): Ball? = balls.maxByOrNull { it.score }
+          }
+          EOF
+
+          cat > app/src/main/java/com/santk/poolaid/Solver.kt << 'EOF'
+          package com.santk.poolaid
+
+          import kotlin.math.acos
+          import kotlin.math.hypot
+
+          class Shot(
+              val cueX: Float, val cueY: Float,
+              val ghostX: Float, val ghostY: Float,
+              val targetX: Float, val targetY: Float,
+              val pocketX: Float, val pocketY: Float,
+              val cut: Float, val blocked: Boolean, val bank: Boolean
+          )
+
+          object Solver {
+
+              fun pockets(t: TableVision.Table): List<Pair<Float, Float>> {
+                  val w = t.width
+                  val h = t.height
+                  val i = t.radius * 1.4f
+                  return listOf(
+                      t.left + i to t.top + i,
+                      t.left + w / 2f to t.top + i * 0.5f,
+                      t.right - i to t.top + i,
+                      t.left + i to t.bottom - i,
+                      t.left + w / 2f to t.bottom - i * 0.5f,
+                      t.right - i to t.bottom - i
+                  )
+              }
+
+              fun solve(cue: TableVision.Ball, balls: List<TableVision.Ball>, t: TableVision.Table): Shot? {
+                  var best: Shot? = null
+                  for (b in balls) {
+                      for (p in pockets(t)) {
+                          val s = tryShot(cue, b, p.first, p.second, t, balls, false) ?: continue
+                          if (best == null || weight(s) < weight(best)) best = s
+                      }
+                  }
+                  if (best != null && !best.blocked) return best
+                  for (b in balls) {
+                      for (p in pockets(t)) {
+                          for (m in mirrors(t, p.first, p.second)) {
+                              val s = tryShot(cue, b, m.first, m.second, t, balls, true) ?: continue
+                              if (s.blocked) continue
+                              if (best == null || weight(s) < weight(best)) best = s
+                          }
+                      }
+                  }
+                  return best
+              }
+
+              private fun weight(s: Shot): Float =
+                  s.cut + (if (s.blocked) 45f else 0f) + (if (s.bank) 14f else 0f)
+
+              private fun tryShot(
+                  cue: TableVision.Ball, b: TableVision.Ball, px: Float, py: Float,
+                  t: TableVision.Table, balls: List<TableVision.Ball>, bank: Boolean
+              ): Shot? {
+                  val r = t.radius
+                  val ux = px - b.x
+                  val uy = py - b.y
+                  val ul = hypot(ux, uy)
+                  if (ul < 1f) return null
+                  val nx = ux / ul
+                  val ny = uy / ul
+                  val gx = b.x - nx * 2f * r
+                  val gy = b.y - ny * 2f * r
+                  val dx = gx - cue.x
+                  val dy = gy - cue.y
+                  val dl = hypot(dx, dy)
+                  if (dl < 1f) return null
+                  val ax = dx / dl
+                  val ay = dy / dl
+                  val dot = (ax * nx + ay * ny).coerceIn(-1f, 1f)
+                  val cut = Math.toDegrees(acos(dot.toDouble())).toFloat()
+                  if (cut > 84f) return null
+                  if (gx < t.left - r || gx > t.right + r || gy < t.top - r || gy > t.bottom + r) return null
+                  var blocked = false
+                  for (o in balls) {
+                      if (o === b) continue
+                      if (dist(o.x, o.y, cue.x, cue.y, gx, gy) < r * 1.9f) { blocked = true; break }
+                  }
+                  return Shot(cue.x, cue.y, gx, gy, b.x, b.y, px, py, cut, blocked, bank)
+              }
+
+              private fun dist(px: Float, py: Float, ax: Float, ay: Float, bx: Float, by: Float): Float {
+                  val dx = bx - ax
+                  val dy = by - ay
+                  val l2 = dx * dx + dy * dy
+                  if (l2 < 0.0001f) return hypot(px - ax, py - ay)
+                  val t = (((px - ax) * dx + (py - ay) * dy) / l2).coerceIn(0f, 1f)
+                  return hypot(px - (ax + t * dx), py - (ay + t * dy))
+              }
+
+              private fun mirrors(t: TableVision.Table, px: Float, py: Float): List<Pair<Float, Float>> =
+                  listOf(
+                      px to 2f * t.top - py,
+                      px to 2f * t.bottom - py,
+                      2f * t.left - px to py,
+                      2f * t.right - px to py
+                  )
+          }
+          EOF
+
+          cat > app/src/main/java/com/santk/poolaid/OverlayView.kt << 'EOF'
+          package com.santk.poolaid
+
+          import android.content.Context
+          import android.graphics.Canvas
+          import android.graphics.Color
+          import android.graphics.DashPathEffect
+          import android.graphics.Paint
+          import android.graphics.Typeface
+          import android.view.View
+
+          class OverlayView(c: Context) : View(c) {
+
+              var scale = 1f
+              private var shot: Shot? = null
+              private var table: TableVision.Table? = null
+              private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+              private val tx = Paint(Paint.ANTI_ALIAS_FLAG)
+              private val bg = Paint(Paint.ANTI_ALIAS_FLAG)
+              private val dash = DashPathEffect(floatArrayOf(22f, 14f), 0f)
+
+              init {
+                  tx.color = Color.WHITE
+                  tx.textSize = 30f
+                  tx.typeface = Typeface.DEFAULT_BOLD
+                  bg.style = Paint.Style.FILL
+                  p.strokeCap = Paint.Cap.ROUND
+              }
+
+              fun render(s: Shot?, t: TableVision.Table?) {
+                  shot = s
+                  table = t
+                  postInvalidate()
+              }
+
+              override fun onDraw(canvas: Canvas) {
+                  val s = shot ?: return
+                  val k = scale
+
+                  drawLine(canvas, Color.argb(90, 0, 255, 120), 16f, s.cueX, s.cueY, s.ghostX, s.ghostY, k)
+                  drawLine(canvas, Color.rgb(0, 255, 120), 4f, s.cueX, s.cueY, s.ghostX, s.ghostY, k)
+
+                  p.pathEffect = dash
+                  drawLine(canvas, Color.argb(90, 255, 210, 0), 12f, s.targetX, s.targetY, s.pocketX, s.pocketY, k)
+                  drawLine(canvas, Color.rgb(255, 210, 0), 3f, s.targetX, s.targetY, s.pocketX, s.pocketY, k)
+                  p.pathEffect = null
+
+                  val r = (table?.radius ?: 8f) * k
+
+                  p.style = Paint.Style.FILL
+                  p.color = Color.argb(45, 0, 255, 120)
+                  canvas.drawCircle(s.ghostX * k, s.ghostY * k, r, p)
+                  p.color = Color.argb(40, 255, 80, 80)
+                  canvas.drawCircle(s.pocketX * k, s.pocketY * k, r * 1.6f, p)
+
+                  p.style = Paint.Style.STROKE
+                  p.strokeWidth = 3f
+                  p.color = Color.rgb(0, 255, 120)
+                  canvas.drawCircle(s.ghostX * k, s.ghostY * k, r, p)
+                  p.color = Color.rgb(255, 80, 80)
+                  canvas.drawCircle(s.pocketX * k, s.pocketY * k, r * 1.6f, p)
+                  p.style = Paint.Style.FILL
+
+                  val label = if (s.blocked) "BLOQUEADO" else "corte " + String.format("%.0f", s.cut)
+                  tx.color = if (s.blocked) Color.rgb(255, 170, 60) else Color.WHITE
+                  val lx = s.ghostX * k + r * 1.6f
+                  val ly = s.ghostY * k - r * 0.6f
+                  val tw = tx.measureText(label)
+                  bg.color = Color.argb(170, 10, 14, 20)
+                  canvas.drawRoundRect(lx - 12f, ly - 34f, lx + tw + 12f, ly + 12f, 14f, 14f, bg)
+                  canvas.drawText(label, lx, ly, tx)
+              }
+
+              private fun drawLine(c: Canvas, color: Int, w: Float, x1: Float, y1: Float, x2: Float, y2: Float, k: Float) {
+                  p.style = Paint.Style.STROKE
+                  p.strokeWidth = w
+                  p.color = color
+                  c.drawLine(x1 * k, y1 * k, x2 * k, y2 * k, p)
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/santk/poolaid/BubbleView.kt << 'EOF'
+          package com.santk.poolaid
+
+          import android.content.Context
+          import android.graphics.Canvas
+          import android.graphics.Color
+          import android.graphics.Paint
+          import android.view.MotionEvent
+          import android.view.View
+          import kotlin.math.abs
+
+          class BubbleView(c: Context) : View(c) {
+
+              var onTap: () -> Unit = {}
+              var onLong: () -> Unit = {}
+              var onDrag: (Int, Int) -> Unit = { _, _ -> }
+
+              private var active = false
+              private var dragging = false
+              private var longFired = false
+              private var downX = 0f
+              private var downY = 0f
+              private var lastX = 0f
+              private var lastY = 0f
+              private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+              private val longPress = Runnable {
+                  if (!dragging) {
+                      longFired = true
+                      onLong()
+                  }
+              }
+
+              fun setActive(v: Boolean) {
+                  active = v
+                  invalidate()
+              }
+
+              override fun onDraw(canvas: Canvas) {
+                  val cx = width / 2f
+                  val cy = height / 2f
+                  val rad = minOf(width, height) / 2f - 8f
+
+                  p.style = Paint.Style.FILL
+                  if (active) {
+                      p.color = Color.argb(60, 61, 220, 151)
+                      canvas.drawCircle(cx, cy, rad + 6f, p)
+                  }
+                  p.color = if (active) Color.argb(240, 14, 110, 76) else Color.argb(230, 20, 26, 34)
+                  canvas.drawCircle(cx, cy, rad, p)
+
+                  p.style = Paint.Style.STROKE
+                  p.strokeWidth = 4f
+                  p.color = if (active) Color.rgb(90, 255, 170) else Color.rgb(125, 145, 165)
+                  canvas.drawCircle(cx, cy, rad - 2f, p)
+
+                  p.style = Paint.Style.FILL
+                  p.color = Color.WHITE
+                  canvas.drawCircle(cx, cy, rad * 0.42f, p)
+                  p.color = if (active) Color.rgb(14, 110, 76) else Color.rgb(20, 26, 34)
+                  canvas.drawCircle(cx, cy, rad * 0.18f, p)
+              }
+
+              override fun onTouchEvent(e: MotionEvent): Boolean {
+                  when (e.actionMasked) {
+                      MotionEvent.ACTION_DOWN -> {
+                          downX = e.x
+                          downY = e.y
+                          lastX = e.rawX
+                          lastY = e.rawY
+                          dragging = false
+                          longFired = false
+                          postDelayed(longPress, 480)
+                          return true
+                      }
+                      MotionEvent.ACTION_MOVE -> {
+                          if (abs(e.x - downX) > 14 || abs(e.y - downY) > 14) dragging = true
+                          if (dragging) {
+                              val dx = (e.rawX - lastX).toInt()
+                              val dy = (e.rawY - lastY).toInt()
+                              if (dx != 0 || dy != 0) {
+                                  onDrag(dx, dy)
+                                  lastX = e.rawX
+                                  lastY = e.rawY
+                              }
+                          }
+                          return true
+                      }
+                      MotionEvent.ACTION_UP -> {
+                          removeCallbacks(longPress)
+                          if (!dragging && !longFired) onTap()
+                          return true
+                      }
+                      MotionEvent.ACTION_CANCEL -> removeCallbacks(longPress)
+                  }
+                  return super.onTouchEvent(e)
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/santk/poolaid/HackService.kt << 'EOF'
+          package com.santk.poolaid
+
+          import android.app.Activity
+          import android.app.Notification
+          import android.app.NotificationChannel
+          import android.app.NotificationManager
+          import android.app.Service
+          import android.content.Context
+          import android.content.Intent
+          import android.content.pm.ServiceInfo
+          import android.graphics.Bitmap
+          import android.graphics.PixelFormat
+          import android.hardware.display.DisplayManager
+          import android.hardware.display.VirtualDisplay
+          import android.media.ImageReader
+          import android.media.projection.MediaProjection
+          import android.media.projection.MediaProjectionManager
+          import android.os.Build
+          import android.os.Handler
+          import android.os.HandlerThread
+          import android.os.IBinder
+          import android.view.Gravity
+          import android.view.WindowManager
+          import kotlin.math.hypot
+
+          class HackService : Service() {
+
+              private lateinit var wm: WindowManager
+              private var overlay: OverlayView? = null
+              private var bubble: BubbleView? = null
+              private var projection: MediaProjection? = null
+              private var display: VirtualDisplay? = null
+              private var reader: ImageReader? = null
+              private var worker: HandlerThread? = null
+              private var handler: Handler? = null
+
+              private var frameW = 0
+              private var frameH = 0
+              private var busy = false
+              private var enabled = true
+              private var shot: Shot? = null
+              private var table: TableVision.Table? = null
+
+              override fun onBind(intent: Intent?): IBinder? = null
+
+              @Suppress("DEPRECATION")
+              override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+                  startForeground(1, notification())
+                  if (intent == null) return START_STICKY
+
+                  val data = intent.getParcelableExtra("data") as Intent?
+                  if (data == null) return START_STICKY
+
+                  wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                  attachOverlay()
+
+                  val code = intent.getIntExtra("code", Activity.RESULT_OK)
+                  val mpm = getSystemService(MediaProjectionManager::class.java)
+                  projection = mpm.getMediaProjection(code, data)
+                  startCapture()
+                  return START_STICKY
+              }
+
+              private fun notification(): Notification {
+                  val id = "poolaid"
+                  val nm = getSystemService(NotificationManager::class.java)
+                  if (nm.getNotificationChannel(id) == null) {
+                      nm.createNotificationChannel(NotificationChannel(id, "PoolAid", NotificationManager.IMPORTANCE_LOW))
+                  }
+                  return Notification.Builder(this, id)
+                      .setContentTitle("PoolAid activo")
+                      .setContentText("Guias y disparo automatico")
+                      .setSmallIcon(android.R.drawable.ic_menu_compass)
+                      .setOngoing(true)
+                      .build()
+              }
+
+              private fun attachOverlay() {
+                  val ov = OverlayView(this)
+                  val lp = WindowManager.LayoutParams(
+                      WindowManager.LayoutParams.MATCH_PARENT,
+                      WindowManager.LayoutParams.MATCH_PARENT,
+                      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                      PixelFormat.TRANSLUCENT
+                  )
+                  wm.addView(ov, lp)
+                  overlay = ov
+
+                  val b = BubbleView(this)
+                  val blp = WindowManager.LayoutParams(
+                      132, 132,
+                      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                      PixelFormat.TRANSLUCENT
+                  )
+                  blp.gravity = Gravity.TOP or Gravity.START
+                  blp.x = 28
+                  blp.y = 240
+                  b.onTap = {
+                      enabled = !enabled
+                      b.setActive(enabled)
+                      if (!enabled) ov.render(null, null)
+                  }
+                  b.onLong = { shootNow() }
+                  b.onDrag = { dx, dy ->
+                      blp.x += dx
+                      blp.y += dy
+                      wm.updateViewLayout(b, blp)
+                  }
+                  wm.addView(b, blp)
+                  bubble = b
+              }
+
+              private fun startCapture() {
+                  val m = resources.displayMetrics
+                  frameW = maxOf(m.widthPixels, m.heightPixels)
+                  frameH = minOf(m.widthPixels, m.heightPixels)
+                  overlay?.scale = frameW / 720f
+
+                  worker = HandlerThread("capture")
+                  worker!!.start()
+                  handler = Handler(worker!!.looper)
+
+                  reader = ImageReader.newInstance(frameW, frameH, PixelFormat.RGBA_8888, 2)
+                  display = projection!!.createVirtualDisplay(
+                      "capture", frameW, frameH, m.densityDpi,
+                      DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                      reader!!.surface, null, handler
+                  )
+
+                  reader!!.setOnImageAvailableListener({ r ->
+                      if (busy) return@setOnImageAvailableListener
+                      val img = r.acquireLatestImage()
+                      if (img == null) return@setOnImageAvailableListener
+                      busy = true
+                      try {
+                          val plane = img.planes[0]
+                          val stride = plane.rowStride / plane.pixelStride
+                          val bmp = Bitmap.createBitmap(stride, img.height, Bitmap.Config.ARGB_8888)
+                          bmp.copyPixelsFromBuffer(plane.buffer)
+                          analyse(bmp)
+                      } catch (e: Exception) {
+                      } finally {
+                          img.close()
+                          busy = false
+                      }
+                  }, handler)
+              }
+
+              private fun analyse(full: Bitmap) {
+                  val small = Bitmap.createScaledBitmap(full, 720, (full.height * 720f / full.width).toInt(), false)
+                  val vision = TableVision()
+                  val t = vision.findTable(small)
+                  if (t == null) {
+                      shot = null
+                      table = null
+                      if (enabled) overlay?.render(null, null)
+                      return
+                  }
+                  val balls = vision.findBalls(small, t)
+                  val cue = vision.pickCue(balls)
+                  if (cue == null || balls.size < 2) {
+                      shot = null
+                      table = t
+                      if (enabled) overlay?.render(null, t)
+                      return
+                  }
+                  val s = Solver.solve(cue, balls.filter { it !== cue }, t)
+                  shot = s
+                  table = t
+                  if (enabled) overlay?.render(s, t)
+              }
+
+              private fun shootNow() {
+                  val s = shot ?: return
+                  val t = table ?: return
+                  val svc = AutoShooterService.inst ?: return
+                  val k = frameW / 720f
+
+                  val cx = s.cueX * k
+                  val cy = s.cueY * k
+                  val dx = s.ghostX * k - cx
+                  val dy = s.ghostY * k - cy
+                  val len = hypot(dx, dy)
+                  if (len < 2f) return
+                  val ux = dx / len
+                  val uy = dy / len
+                  val pull = t.width * k * 0.2f
+
+                  val points = listOf(
+                      cx to cy,
+                      cx + dx * 0.12f to cy + dy * 0.12f,
+                      cx - ux * pull to cy - uy * pull
+                  )
+                  svc.stroke(points, 460)
+              }
+
+              override fun onDestroy() {
+                  bubble?.let { runCatching { wm.removeView(it) } }
+                  overlay?.let { runCatching { wm.removeView(it) } }
+                  reader?.close()
+                  display?.release()
+                  projection?.stop()
+                  worker?.quitSafely()
+                  super.onDestroy()
+              }
+          }
+          EOF
+
+      - name: Compilar APK
+        run: gradle assembleRelease --stacktrace --no-daemon
+
+      - name: Publicar artifacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: PoolAid-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Adjuntar al release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
